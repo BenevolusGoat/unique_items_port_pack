@@ -1,11 +1,16 @@
+--VERSION v1.1	
+
 local mod = RegisterMod("Unique Items Port Pack", 1)
 
 if not UniqueItemsAPI then
-	local warn = "[Unique Items Port Pack] UniqueItemsAPI is not installed! It is required for this mod to function, please install it from the Steam Workshop."
+	local warn =
+	"[Unique Items Port Pack] UniqueItemsAPI is not installed! It is required for this mod to function, please install it from the Steam Workshop."
 	print(warn)
 	Isaac.DebugString(warn)
 	return
 end
+
+--#region variables
 
 local basePath = "gfx_unique_portpack/"
 local itemPath = basePath .. "collectibles/"
@@ -13,422 +18,685 @@ local costumePath = basePath .. "costumes/"
 local familiarPath = basePath .. "familiars/"
 local knifePath = basePath .. "knives/"
 
------------------
---  MR. DOLLY  --
------------------
+--#endregion
 
---Lost and Soul technically never use their costumes but stewart created one for each of them so I'm implementing their costumes anyway lol
-local noCostumes = {
-	[PlayerType.PLAYER_THEFORGOTTEN] = true,
-	[PlayerType.PLAYER_BETHANY] = true,
-	[PlayerType.PLAYER_JACOB] = true,
-	[PlayerType.PLAYER_THEFORGOTTEN_B] = true,
-	[PlayerType.PLAYER_BETHANY_B] = true,
-	[PlayerType.PLAYER_JACOB_B] = true,
-	[PlayerType.PLAYER_JACOB2_B] = true,
-}
+function mod:OnUniqueItemsLoad()
+	--#region Register Moddeds
 
-UniqueItemsAPI.RegisterMod("Stewartisme's Mr Dolly's")
-for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
-	local costumePath = noCostumes[playerType] and nil or
-		costumePath .. "mr_dolly_stewart/" .. playerType .. "_DollyCostume.png"
-	UniqueItemsAPI.AddCharacterItem({
-		PlayerType = playerType,
-		ItemID = CollectibleType.COLLECTIBLE_MR_DOLLY,
-		ItemSprite = itemPath .. "mr_dolly_stewart/" .. playerType .. "_MrDolly.png",
-		CostumeSpritePath = costumePath,
-	})
-end
-UniqueItemsAPI.RegisterCharacter("Josuke", false)
-UniqueItemsAPI.RegisterCharacter("Josuke", true)
-UniqueItemsAPI.AddCharacterItem({
-	PlayerType = Isaac.GetPlayerTypeByName("Josuke", false),
-	ItemID = CollectibleType.COLLECTIBLE_MR_DOLLY,
-	ItemSprite = itemPath .. "mr_dolly_stewart/Josuke_MrDolly.png",
-	CostumeSpritePath = costumePath
-})
-UniqueItemsAPI.AddCharacterItem({
-	PlayerType = Isaac.GetPlayerTypeByName("Josuke", true),
-	ItemID = CollectibleType.COLLECTIBLE_MR_DOLLY,
-	ItemSprite = itemPath .. "mr_dolly_stewart/BJosuke_MrDolly.png",
-	CostumeSpritePath = costumePath
-})
-
-------------------
---  BIRTHRIGHT  --
-------------------
-
-UniqueItemsAPI.RegisterMod("Gouchnox's Birthrights")
-for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
-	UniqueItemsAPI.AddCharacterItem({
-		PlayerType = playerType,
-		ItemID = CollectibleType.COLLECTIBLE_BIRTHRIGHT,
-		ItemSprite = itemPath .. "birthright_gouchnox/" .. playerType .. "_birthright.png"
-	})
-end
-
-local gouchnoxSupportedChars = {
-	"Andromeda",
-	"Deleted",
-	"Job",
-	"Mastema",
-	"Samuel"
-}
-local gouchnoxSupportedTainteds = {
-	"AndromedaB",
-	"Deleted",
-	"Job",
-	"MastemaB"
-}
-
-for _, name in ipairs(gouchnoxSupportedChars) do
-	local playerType = Isaac.GetPlayerTypeByName(name, false)
-	UniqueItemsAPI.RegisterCharacter(name, false)
-	UniqueItemsAPI.AddCharacterItem({
-		PlayerType = playerType,
-		ItemID = CollectibleType.COLLECTIBLE_BIRTHRIGHT,
-		ItemSprite = itemPath .. "birthright_gouchnox/" .. string.lower(name) .. "_birthright.png"
-	})
-end
-
-for _, name in ipairs(gouchnoxSupportedTainteds) do
-	local playerType = Isaac.GetPlayerTypeByName(name, true)
-	UniqueItemsAPI.RegisterCharacter(name, true)
-	if string.sub(name, -1, -1) ~= "B" then name = name .. "B" end
-	UniqueItemsAPI.AddCharacterItem({
-		PlayerType = playerType,
-		ItemID = CollectibleType.COLLECTIBLE_BIRTHRIGHT,
-		ItemSprite = itemPath .. "birthright_gouchnox/" .. string.lower(name) .. "_birthright.png"
-	})
-end
-
-local function DeletedHasBirthright(itemParams)
-	if itemParams.ModName == "Gouchnox's Birthrights"
-		and itemParams.PlayerType == Isaac.GetPlayerTypeByName("Deleted", false)
-		and itemParams.ItemID == CollectibleType.COLLECTIBLE_BIRTHRIGHT then
-		return true
-	end
-	return false
-end
-
-local function DeletedModeBirthright(itemParams)
-	---@diagnostic disable-next-line: undefined-global
-	itemParams.ItemSprite = string.gsub(itemParams.ItemSprite, "birthright.png", "birthright_" .. theDeletedMode .. ".png")
-	return itemParams
-end
-
-UniqueItemsAPI.AddItemModifier("Gouchnox Deleted Birthright", DeletedHasBirthright, DeletedModeBirthright)
-
-local TearFlagsBlood = {
-	[TearVariant.BLOOD] = true,
-	[TearVariant.CUPID_BLOOD] = true,
-	[TearVariant.PUPULA_BLOOD] = true,
-	[TearVariant.GODS_FLESH_BLOOD] = true,
-	[TearVariant.NAIL_BLOOD] = true,
-	[TearVariant.GLAUCOMA_BLOOD] = true,
-	[TearVariant.EYE_BLOOD] = true,
-}
-local SkinColorToString = {
-	[SkinColor.SKIN_PINK] = "",
-	[SkinColor.SKIN_WHITE] = "_white",
-	[SkinColor.SKIN_BLACK] = "_black",
-	[SkinColor.SKIN_BLUE] = "_blue",
-	[SkinColor.SKIN_RED] = "_strawberry",
-	[SkinColor.SKIN_GREEN] = "_green",
-	[SkinColor.SKIN_GREY] = "_grey",
-}
-
-local function AndromedaBHasBirthright(itemParams)
-	local tearVariant = itemParams.Player:GetTearHitParams(WeaponType.WEAPON_TEARS, 1, 1, nil).TearVariant
-
-	if itemParams.ModName == "Gouchnox's Birthrights"
-		and itemParams.PlayerType == Isaac.GetPlayerTypeByName("AndromedaB", true)
-		and itemParams.ItemID == CollectibleType.COLLECTIBLE_BIRTHRIGHT
-		and itemParams.Player ~= nil
-		and (
-		itemParams.Player:GetHeadColor() ~= SkinColor.SKIN_PINK
-			or TearFlagsBlood[tearVariant] == true
-		)
-	then
-		return true
-	end
-	return false
-end
-
-local function AndromedaBSkinColorBirthright(itemParams)
-	local tearVariant = itemParams.Player:GetTearHitParams(WeaponType.WEAPON_TEARS, 1, 1, nil).TearVariant
-
-	if TearFlagsBlood[tearVariant] then
-		itemParams.ItemSprite = string.gsub(itemParams.ItemSprite, "birthright.png", "birthright_blood.png")
-	else
-		itemParams.ItemSprite = string.gsub(itemParams.ItemSprite, "birthright.png",
-			"birthright" .. SkinColorToString[itemParams.Player:GetHeadColor()] .. ".png")
-	end
-	return itemParams
-end
-
-UniqueItemsAPI.AddItemModifier("Gouchnox AndromedaB Birthright", AndromedaBHasBirthright, AndromedaBSkinColorBirthright)
-
----------------
---  INCUBUS  --
----------------
-
-UniqueItemsAPI.RegisterMod("Incubuddies")
---Excluding Tainted Soul as they cannot have items
-for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 2 do
-	local spritePath = familiarPath .. "incubus_incubuddies/" .. playerType .. "_incubus.png"
-	UniqueItemsAPI.AddCharacterFamiliar({
-		PlayerType = playerType,
-		FamiliarVariant = FamiliarVariant.INCUBUS,
-		FamiliarSprite = {
-			[0] = spritePath,
-			[1] = spritePath,
-			[2] = spritePath
-		}
-	})
-end
-
---------------------
---  SPIRIT SWORD  --
---------------------
-
-local unsupportedSwords = {
-	[PlayerType.PLAYER_THEFORGOTTEN] = true,
-	[PlayerType.PLAYER_THEFORGOTTEN_B] = true,
-	[PlayerType.PLAYER_THESOUL_B] = true
-}
-
----@class KnifeVariant
-local KnifeVariant = {
-	MOMS_KNIFE = 0,
-	BONE = 1,
-	BONE_KNIFE = 2,
-	JAWBONE = 3,
-	BAG_OF_CRAFTING = 4,
-	SUMPTORIUM = 5,
-	NOTCHED_AXE = 9,
-	SPIRIT_SWORD = 10,
-	TECH_SWORD = 11,
-}
-
-UniqueItemsAPI.RegisterMod("Xtrike's Take")
-for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
-	if not unsupportedSwords[playerType] then
-		local spritePath = knifePath .. "spirit_sword_xtrike/" .. playerType .. "_spirit_sword.png"
-		UniqueItemsAPI.AddCharacterKnife({
-			PlayerType = playerType,
-			KnifeVariant = KnifeVariant.SPIRIT_SWORD,
-			KnifeSprite = {
-				[0] = spritePath,
-				[1] = spritePath,
-				[2] = spritePath
-			},
-		})
-	end
-end
-
-UniqueItemsAPI.RegisterMod("Royal's Take")
-for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
-	if not unsupportedSwords[playerType] then
-		local spritePath = knifePath .. "spirit_sword_royal/" .. playerType .. "_spirit_sword.png"
-		UniqueItemsAPI.AddCharacterKnife({
-			PlayerType = playerType,
-			KnifeVariant = KnifeVariant.SPIRIT_SWORD,
-			KnifeSprite = {
-				[0] = spritePath,
-				[1] = spritePath,
-				[2] = spritePath
-			}
-		})
-	end
-end
-
-UniqueItemsAPI.RegisterMod("L0GiCked's Animated Swords")
---Excluding Tainted Soul as they cannot have items
---Code for Tainted Eve, Forgotten, and Tainted Forgotten's special swords are commented out thanks to knives being a bitch to work with. They mostly work, but not to my standards to include them in the pack.
-for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 2 do
-	local spritePath = knifePath .. "spirit_sword_L0GiCked/" .. playerType .. "_spirit_sword.anm2"
-	local tearPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_tear.anm2")
-	local splashPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_poof.anm2")
-
-	if playerType == PlayerType.PLAYER_THEFORGOTTEN or playerType == PlayerType.PLAYER_THEFORGOTTEN_B then
-		--[[ UniqueItemsAPI.AddCharacterKnife({
-			PlayerType = playerType,
-			KnifeVariant = KnifeVariant.BONE,
-			KnifeSprite = "gfx/008.001_Bone Club.anm2"
-		}) ]]
-	else
-		UniqueItemsAPI.AddCharacterKnife({
-			PlayerType = playerType,
-			KnifeVariant = KnifeVariant.SPIRIT_SWORD,
-			KnifeSprite = spritePath,
-			SwordProjectile = {
-				Beam = tearPath,
-				Splash = playerType == PlayerType.PLAYER_BLUEBABY_B and nil or splashPath
-			}
-		})
-		--[[ UniqueItemsAPI.AddCharacterItem({
-			PlayerType = playerType,
-			ItemID = CollectibleType.COLLECTIBLE_SPIRIT_SWORD,
-			ItemSprite = itemPath .. "spirit_sword_L0GiCked/" .. playerType .. "_spirit_sword.png",
-		}) ]]
-	end
-
-	--[[ if playerType == PlayerType.PLAYER_EVE_B then
-	UniqueItemsAPI.AddCharacterKnife({
-		PlayerType = playerType,
-		KnifeVariant = KnifeVariant.SUMPTORIUM,
-		KnifeSprite = {
-			[0] = "gfx/effects/effect_sumptorium.png",
-		}
-	})
-	end ]]
-end
-
-local noTearModded = {
-	["​Isaac"] = true,
-}
-
-local L0giCkedsupportedChars = {
-	"Andromeda"
-}
-local L0giCkedsupportedTainteds = {
-	"AndromedaB"
-}
-local L0giCkedsupportedTarnisheds = {
-	"​Isaac",
-	"​Magdalene",
-}
-
-for _, name in ipairs(L0giCkedsupportedChars) do
-	local playerType = Isaac.GetPlayerTypeByName(name, false)
-	local spritePath = knifePath .. "spirit_sword_L0GiCked/" .. string.lower(name) .. "_spirit_sword.anm2"
-	local tearPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_tear.anm2")
-	local splashPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_poof.anm2")
-	UniqueItemsAPI.AddCharacterKnife({
-		PlayerType = playerType,
-		KnifeVariant = KnifeVariant.SPIRIT_SWORD,
-		KnifeSprite = spritePath,
-		SwordProjectile = noTearModded[name] and nil or {
-			Beam = tearPath,
-			Splash = splashPath
-		}
-	})
-end
-
-for _, name in ipairs(L0giCkedsupportedTainteds) do
-	local playerType = Isaac.GetPlayerTypeByName(name, true)
-	local spritePath = knifePath .. "spirit_sword_L0GiCked/" .. string.lower(name) .. "_spirit_sword.anm2"
-	local tearPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_tear.anm2")
-	local splashPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_poof.anm2")
-	UniqueItemsAPI.AddCharacterKnife({
-		PlayerType = playerType,
-		KnifeVariant = KnifeVariant.SPIRIT_SWORD,
-		KnifeSprite = spritePath,
-		SwordProjectile = noTearModded[name] and nil or {
-			Beam = tearPath,
-			Splash = splashPath
-		}
-	})
-end
-
---[[ for _, name in ipairs(L0giCkedsupportedTarnisheds) do
-	UniqueItemsAPI.RegisterCharacter(name, false)
-	local playerType = Isaac.GetPlayerTypeByName(name, false)
-	local spritePath = knifePath .. "spirit_sword_L0GiCked/" .. string.lower(string.sub(name, 2, -1)) .. "c_spirit_sword.anm2"
-	local tearPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_tear.anm2")
-	local splashPath = string.gsub(spritePath, "spirit_sword.anm2", "sword_poof.anm2")
-	UniqueItemsAPI.AddCharacterKnife({
-		PlayerType = playerType,
-		KnifeVariant = KnifeVariant.SPIRIT_SWORD,
-		KnifeSprite = spritePath,
-		SwordProjectile = noTearModded[name] and nil or {
-			Beam = tearPath,
-			Splash = splashPath
-		}
-	})
-end ]]
-
-
---[[ 
-local function IsL0GiCkedSwordEnabled(params)
-	local isUsingL0giCked = false
-	if params.ItemID == CollectibleType.COLLECTIBLE_SPIRIT_SWORD
-	and UniqueItemsAPI.GetCurrentKnifeMod(KnifeVariant.SPIRIT_SWORD, params.PlayerType) == "L0GiCked's Animated Swords"
-	and UniqueItemsAPI.IsKnifeEnabled(KnifeVariant.SPIRIT_SWORD) == true
-	then
-		isUsingL0giCked = true
-	end
-	return isUsingL0giCked
-end
-
-local function ApplyL0GiCkedCollectibleSprite(params)
-	params.ItemSprite = "gfx_unique_portpack/collectibles/spirit_sword_l0giCked/"..params.PlayerType.."_spirit_sword.png"
-	return params
-end
-
-UniqueItemsAPI.AddItemModifier("L0GiCked Sword Collectible", IsL0GiCkedSwordEnabled, ApplyL0GiCkedCollectibleSprite) ]]
-
---[[ local function BoneShouldPlaySpecialIdleAnimation(params)
-	if params.ModName == "Animated Spirit Swords"
-	and params.KnifeVariant == KnifeVariant.BONE
-	and params.Player ~= nil
-	and params.Player:HasCollectible(CollectibleType.COLLECTIBLE_SPIRIT_SWORD)
-	and params.Knife ~= nil
-	and params.Knife:GetSprite():GetAnimation() == "Idle"
-	and not params.Knife:GetSprite():IsPlaying("Idle")
-	then
-		return true
-	end
-
-	return false
-end
-
-local function PlayAnimatedBoneSwordIdle(params)
-	params.Knife:GetSprite():Play("Idle", true)
-	return params
-end
-
-UniqueItemsAPI.AddKnifeModifier("Forgotten l0giCked Bone Idle", BoneShouldPlaySpecialIdleAnimation, PlayAnimatedBoneSwordIdle)
-
-local function ForgottenHasSpiritSword(params)
-	if params.ModName == "Animated Spirit Swords"
-	and (params.PlayerType == PlayerType.PLAYER_THEFORGOTTEN
-	or params.PlayerType == PlayerType.PLAYER_THEFORGOTTEN_B)
-	and params.Player ~= nil
-	and params.Player:HasCollectible(CollectibleType.COLLECTIBLE_SPIRIT_SWORD)
-	then
-		return true
-	end
-	return false
-end
-
-local function ForgottenAnimatedSword(params)
-	local spritePath = knifePath .. "spirit_sword_l0giCked/" .. params.PlayerType .. "_spirit_sword.anm2"
-	params.KnifeSprite = spritePath
-	return params
-end
-
-UniqueItemsAPI.AddKnifeModifier("Forgotten l0giCked Bone", ForgottenHasSpiritSword, ForgottenAnimatedSword)
-
-local function EveBHasSpiritSwordAndSumptoriumKnife(params)
-	if params.ModName == "Animated Spirit Swords"
-	and params.KnifeVariant == KnifeVariant.SUMPTORIUM
-	and params.PlayerType == PlayerType.PLAYER_EVE_B
-	and params.Player ~= nil
-	and params.Player:HasCollectible(CollectibleType.COLLECTIBLE_SPIRIT_SWORD)
-	then
-		return true
-	end
-	return false
-end
-
-local function EveUniqueSumptorium(params)
-	params.KnifeSprite = {
-		[0] = knifePath .. "spirit_sword_l0giCked/effect_sumptorium.png",
+	local fullModdedSupportList = {
+		"Josuke",
+		"Deleted",
+		"Samuel",
+		"Golem",
+		"Fiend",
+		"Josuke",
+		"Namie",
+		"Sarah",
+		"Dante",
+		"Charon",
+		"Andromeda",
+		"Samael",
+		"Bertran",
+		"Mei",
+		"Icarus",
+		"Mammon",
+		"Edith",
+		" Edith",
+		"Job",
+		"Arachna",
+		"Nemesis",
+		"Sodom",
+		"Gomorrah",
+		"Bela",
+		"Eevee",
+		"Guppy",
+		"Steven",
+		"Car",
+		"Hollow",
+		"Stranger",
+		"Mastema",
+		"MaidInTheMist",
+		"Dio Part 1",
+		"Siren",
+		"​Isaac",
+		"​Magdalene",
+		"​Cain",
+		"​Judas",
+		"​Samson",
+		"​Eden",
+		"​Keeper",
+		"Bael",
+		"The Sheriff",
+		"Felix",
+		"!!!",
+		"...",
+		"Henry"
 	}
-	return params
+
+	local fullModdedTaintedList = {
+		"Josuke",
+		"Deleted",
+		"Fiend",
+		"Tainted Namie",
+		"AndromedaB",
+		"Samael",
+		"Tainted Mei",
+		"Edith",
+		"Job",
+		"Arachna",
+		"Tainted Nemesis",
+		"Sodom",
+		"Gomorrah",
+		"Decayed",
+		"Tainted Stranger",
+		"MastemaB",
+		"Dio Part 3",
+		"!!!",
+	}
+
+	for _, name in ipairs(fullModdedSupportList) do
+		local displayName
+		if string.sub(name, 1, 1) == "​" then
+			displayName = "Tarnished " .. string.sub(name, 2, -1)
+		end
+		if name == " Edith" then
+			displayName = "Edith (Classic)"
+		end
+		UniqueItemsAPI.RegisterCharacter(name, false, displayName)
+	end
+
+	for _, name in ipairs(fullModdedTaintedList) do
+		local displayName
+		if string.find(name, "Tainted") then
+			displayName = name
+		end
+		if string.sub(name, -1, -1) == "B" then
+			displayName = string.sub(name, 1, -2)
+		end
+		UniqueItemsAPI.RegisterCharacter(name, false, displayName)
+	end
+
+	--#endregion
+	--#region Mr. Dolly
+
+	-----------------
+	--  MR. DOLLY  --
+	-----------------
+
+	local noCostumes = {
+		[PlayerType.PLAYER_THEFORGOTTEN] = true,
+		[PlayerType.PLAYER_BETHANY] = true,
+		[PlayerType.PLAYER_JACOB] = true,
+		[PlayerType.PLAYER_THEFORGOTTEN_B] = true,
+		[PlayerType.PLAYER_BETHANY_B] = true,
+		[PlayerType.PLAYER_JACOB_B] = true,
+		[PlayerType.PLAYER_JACOB2_B] = true,
+	}
+
+	UniqueItemsAPI.RegisterMod("Stewartisme's Mr Dolly's")
+	for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
+		---@type string | nil
+		local dollyCostumePath = costumePath .. "mr_dolly_stewart/" .. playerType .. "_DollyCostume.png"
+		if noCostumes[playerType] then dollyCostumePath = nil end
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = playerType,
+			ObjectID = CollectibleType.COLLECTIBLE_MR_DOLLY,
+			SpritePath = { itemPath .. "mr_dolly_stewart/" .. playerType .. "_MrDolly.png" },
+			CostumeSpritePath = dollyCostumePath,
+		}, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+	end
+
+	UniqueItemsAPI.AssignUniqueObject({
+		PlayerType = Isaac.GetPlayerTypeByName("Josuke", false),
+		ObjectID = CollectibleType.COLLECTIBLE_MR_DOLLY,
+		SpritePath = { itemPath .. "mr_dolly_stewart/Josuke_MrDolly.png" },
+		CostumeSpritePath = costumePath
+	}, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+
+	UniqueItemsAPI.AssignUniqueObject({
+		PlayerType = Isaac.GetPlayerTypeByName("Josuke", true),
+		ObjectID = CollectibleType.COLLECTIBLE_MR_DOLLY,
+		SpritePath = { itemPath .. "mr_dolly_stewart/BJosuke_MrDolly.png" },
+		CostumeSpritePath = costumePath
+	}, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+
+	--#endregion
+	--#region Birthright
+
+	------------------
+	--  BIRTHRIGHT  --
+	------------------
+
+	UniqueItemsAPI.RegisterMod("Gouchnox's Birthrights")
+	for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = playerType,
+			ObjectID = CollectibleType.COLLECTIBLE_BIRTHRIGHT,
+			SpritePath = {itemPath .. "birthright_gouchnox/" .. playerType .. "_birthright.png"}
+		}, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+	end
+
+	local gouchnoxSupportedChars = {
+		"Andromeda",
+		"Deleted",
+		"Job",
+		"Mastema",
+		"Samuel",
+		"Steven"
+	}
+	local gouchnoxSupportedTainteds = {
+		"AndromedaB",
+		"Deleted",
+		"Job",
+		"MastemaB"
+	}
+
+	for i = 1, 2 do
+		local charList = i == 1 and gouchnoxSupportedChars or gouchnoxSupportedTainteds
+		local isTainted = i == 2
+		for _, name in ipairs(charList) do
+			local playerType = Isaac.GetPlayerTypeByName(name, isTainted)
+			UniqueItemsAPI.AssignUniqueObject({
+				PlayerType = playerType,
+				ObjectID = CollectibleType.COLLECTIBLE_BIRTHRIGHT,
+				SpritePath = {itemPath .. "birthright_gouchnox/" .. string.lower(name) .. "_birthright.png"}
+			}, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+		end
+	end
+
+	local function deletedHasBirthright(params)
+		return params.ModName == "Gouchnox's Birthrights"
+			and theDeletedMode ~= nil
+			and params.PlayerType == Isaac.GetPlayerTypeByName("Deleted", false)
+			and params.ObjectID == CollectibleType.COLLECTIBLE_BIRTHRIGHT
+	end
+
+	local function deletedModeBirthright(params)
+		params.SpritePath = {string.gsub(params.SpritePath[1], "birthright.png", "birthright_" .. theDeletedMode .. ".png")}
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("Gouchnox Deleted Birthright", deletedHasBirthright, deletedModeBirthright, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+
+	local TearFlagsBlood = {
+		[TearVariant.BLOOD] = true,
+		[TearVariant.CUPID_BLOOD] = true,
+		[TearVariant.PUPULA_BLOOD] = true,
+		[TearVariant.GODS_FLESH_BLOOD] = true,
+		[TearVariant.NAIL_BLOOD] = true,
+		[TearVariant.GLAUCOMA_BLOOD] = true,
+		[TearVariant.EYE_BLOOD] = true
+	}
+	local SkinColorToString = {
+		[SkinColor.SKIN_PINK] = "",
+		[SkinColor.SKIN_WHITE] = "_white",
+		[SkinColor.SKIN_BLACK] = "_black",
+		[SkinColor.SKIN_BLUE] = "_blue",
+		[SkinColor.SKIN_RED] = "_strawberry",
+		[SkinColor.SKIN_GREEN] = "_green",
+		[SkinColor.SKIN_GREY] = "_grey"
+	}
+
+	local function andromedaBHasBirthright(params)
+		local tearVariant = params.Player:GetTearHitParams(WeaponType.WEAPON_TEARS, 1, 1, nil).TearVariant
+
+		return params.ModName == "Gouchnox's Birthrights"
+			and params.PlayerType == Isaac.GetPlayerTypeByName("AndromedaB", true)
+			and params.ObjectID == CollectibleType.COLLECTIBLE_BIRTHRIGHT
+			and params.Player ~= nil
+			and (
+				params.Player:GetHeadColor() ~= SkinColor.SKIN_PINK
+				or TearFlagsBlood[tearVariant]
+			)
+	end
+
+	local function andromedaBSkinColorBirthright(params)
+		local tearVariant = params.Player:GetTearHitParams(WeaponType.WEAPON_TEARS, 1, 1, nil).TearVariant
+		local suffix = TearFlagsBlood[tearVariant] and SkinColorToString[params.Player:GetHeadColor()] or "_blood"
+		local gsubReplace = "birthright" .. suffix .. ".png"
+		params.SpritePath = {string.gsub(params.SpritePath[1], "birthright.png", gsubReplace)}
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("Gouchnox AndromedaB Birthright", andromedaBHasBirthright,
+		andromedaBSkinColorBirthright, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+
+	--#endregion
+	--#region Incubus
+
+	---------------
+	--  INCUBUS  --
+	---------------
+
+	UniqueItemsAPI.RegisterMod("Incubuddies")
+
+	for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 2 do
+		local spritePath = familiarPath .. "incubus_incubuddies/" .. playerType .. "_incubus.png"
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = playerType,
+			ObjectID = FamiliarVariant.INCUBUS,
+			SpritePath = {
+				[0] = spritePath,
+				[1] = spritePath,
+				[2] = spritePath
+			}
+		}, UniqueItemsAPI.ObjectType.FAMILIAR)
+	end
+
+	--#endregion
+	--#region Spirit Sword
+
+	--------------------
+	--  SPIRIT SWORD  --
+	--------------------
+
+	local unsupportedSwords = {
+		[PlayerType.PLAYER_THEFORGOTTEN] = true,
+		[PlayerType.PLAYER_THEFORGOTTEN_B] = true,
+		[PlayerType.PLAYER_THESOUL_B] = true
+	}
+
+	local KnifeVariant = {
+		MOMS_KNIFE = 0,
+		BONE_CLUB = 1,
+		BONE_KNIFE = 2,
+		JAWBONE = 3,
+		BAG_OF_CRAFTING = 4,
+		SUMPTORIUM = 5,
+		NOTCHED_AXE = 9,
+		SPIRIT_SWORD = 10,
+		TECH_SWORD = 11,
+	}
+
+	for i = 1, 2 do
+		local modName = i == 1 and "Xtrike's Take" or "Royal's Take"
+		local modPath = i == 1 and "xtrike" or "royal"
+		UniqueItemsAPI.RegisterMod(modName)
+		for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
+			if unsupportedSwords[playerType] then goto continue end
+			local spritePath = knifePath .. "spirit_sword_" .. modPath .. "/" .. playerType .. "_spirit_sword.png"
+			UniqueItemsAPI.AssignUniqueObject({
+				PlayerType = playerType,
+				ObjectID = KnifeVariant.SPIRIT_SWORD,
+				SpritePath = {
+					[0] = spritePath,
+					[1] = spritePath,
+					[2] = spritePath,
+				}
+			}, UniqueItemsAPI.ObjectType.KNIFE)
+			::continue::
+		end
+	end
+
+	local henryPath = knifePath .. "spirit_sword_royal/henry_spirit_sword.png"
+	UniqueItemsAPI.AssignUniqueObject({
+		PlayerType = Isaac.GetPlayerTypeByName("Henry", false),
+		ObjectID = KnifeVariant.SPIRIT_SWORD,
+		SpritePath = {
+			[0] = henryPath,
+			[1] = henryPath,
+			[2] = henryPath
+		}
+	}, UniqueItemsAPI.ObjectType.KNIFE)
+
+	local altSwords = {
+		"Eyelander",
+		"Australium Eyelander",
+		"Brand of the Inferno",
+		"Zenith",
+		"Solar Chainsaw",
+		"Old Nail",
+		"Sharpened Nail",
+		"Channeled Nail",
+		"Coiled Nail",
+		"Pure Nail",
+		"Master Sword Lvl 1",
+		"Master Sword Lvl 2",
+		"Master Sword Lvl 3",
+		"Fabled Sans Blade (Blue)",
+		"Fabled Sans Blade (Orange)",
+		"8itch Sword",
+		"Beam Katana",
+		"Binary Sword",
+		"Candlestick",
+		"Cardboard Tube",
+		"Claymore",
+		"Cleaver",
+		"Crucible",
+		"Diamond Sword",
+		"Dio's Sign",
+		"Dragonslayer",
+		"Feather",
+		"Guiding Moonlight",
+		"Iconoclasts Wrench",
+		"Life Stealing Sword",
+		"Lothric Knight Sword",
+		"Luna Nights",
+		"Phosphorus",
+		"Planetarium",
+		"Pyre Blade",
+		"Reimu Fumo",
+		"Roblox Sword",
+		"Sord",
+		"Strange Umbrella",
+		"Text Sword",
+		"Tricky's Sign",
+	}
+
+	for _, modName in ipairs(altSwords) do
+		local swordName = string.lower(string.gsub(modName, " ", "_"))
+		local spritePath = knifePath .. "spirit_sword_royal_alts/" .. swordName .. ".png"
+		UniqueItemsAPI.RegisterMod(swordName)
+		UniqueItemsAPI.AssignUniqueObject({
+			ObjectID = KnifeVariant.SPIRIT_SWORD,
+			GlobalMod = true,
+			SpritePath = {
+				[0] = spritePath,
+				[1] = spritePath,
+				[2] = spritePath
+			}
+		}, UniqueItemsAPI.ObjectType.KNIFE)
+	end
+
+	--#endregion
+	--#region Spirit Sword (Animated)
+
+	local animatedModName = "L0GiCked's Animated Swords"
+	UniqueItemsAPI.RegisterMod(animatedModName)
+
+	for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 2 do
+		local anm2Path = knifePath .. "spirit_sword_L0GiCked/" .. playerType .. "_spirit_sword.anm2"
+		local tearPath = string.gsub(anm2Path, "spirit_sword.anm2", "sword_tear.anm2")
+		local splashPath = string.gsub(anm2Path, "spirit_sword.anm2", "sword_poof.anm2")
+
+		if playerType == PlayerType.PLAYER_THEFORGOTTEN or playerType == PlayerType.PLAYER_THEFORGOTTEN_B then
+			UniqueItemsAPI.AssignUniqueObject({
+				PlayerType = playerType,
+				ObjectID = KnifeVariant.BONE_CLUB,
+				DisableByDefault = true
+			}, UniqueItemsAPI.ObjectType.KNIFE)
+		elseif playerType == PlayerType.PLAYER_EVE_B then
+			UniqueItemsAPI.AssignUniqueObject({
+				PlayerType = playerType,
+				ObjectID = KnifeVariant.SUMPTORIUM,
+				SpritePath = {
+					[0] = "gfx/effects/effect_sumptorium.png",
+				},
+				DisableByDefault = true
+			}, UniqueItemsAPI.ObjectType.KNIFE)
+		else
+			UniqueItemsAPI.AssignUniqueObject({
+				PlayerType = playerType,
+				ObjectID = KnifeVariant.SPIRIT_SWORD,
+				Anm2 = anm2Path,
+				SwordProjectile = {
+					Beam = tearPath,
+					Splash = playerType == PlayerType.PLAYER_BLUEBABY_B and nil or splashPath
+				}
+			}, UniqueItemsAPI.ObjectType.KNIFE)
+		end
+	end
+
+	local noTearModded = {
+		["​Isaac"] = true,
+	}
+
+	local L0giCkedsupportedChars = {
+		"Andromeda"
+	}
+	local L0giCkedsupportedTainteds = {
+		"AndromedaB"
+	}
+	local L0giCkedsupportedTarnisheds = {
+		"​Isaac",
+		"​Magdalene",
+	}
+
+	local function assignModdedSpiritSword(name)
+		local playerType = Isaac.GetPlayerTypeByName(name, false)
+		local anm2Path = knifePath .. "spirit_sword_L0GiCked/" .. string.lower(name) .. "_spirit_sword.anm2"
+		local tearPath = string.gsub(anm2Path, "spirit_sword.anm2", "sword_tear.anm2")
+		local splashPath = string.gsub(anm2Path, "spirit_sword.anm2", "sword_poof.anm2")
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = playerType,
+			ObjectID = KnifeVariant.SPIRIT_SWORD,
+			Anm2 = anm2Path,
+			SwordProjectile = noTearModded[name] and nil or {
+				Beam = tearPath,
+				Splash = splashPath
+			}
+		}, UniqueItemsAPI.ObjectType.KNIFE)
+	end
+
+	for _, name in ipairs(L0giCkedsupportedChars) do
+		assignModdedSpiritSword(name)
+	end
+
+	for _, name in ipairs(L0giCkedsupportedTainteds) do
+		assignModdedSpiritSword(name)
+	end
+
+	for _, name in ipairs(L0giCkedsupportedTarnisheds) do
+		assignModdedSpiritSword(name)
+	end
+
+	local function isL0GiCkedSwordEnabled(params)
+		return params.ObjectID == CollectibleType.COLLECTIBLE_SPIRIT_SWORD
+			and
+			UniqueItemsAPI.GetCurrentObjectMod(KnifeVariant.SPIRIT_SWORD, params.PlayerType,
+				UniqueItemsAPI.ObjectType.KNIFE) == animatedModName
+	end
+
+	local function applyL0GiCkedCollectibleSprite(params)
+		params.SpritePath = { "gfx_unique_portpack/collectibles/spirit_sword_l0giCked/" ..
+		params.PlayerType .. "_spirit_sword.png" }
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("L0GiCked Sword Collectible", isL0GiCkedSwordEnabled, applyL0GiCkedCollectibleSprite, UniqueItemsAPI.ObjectType.COLLECTIBLE)
+
+	local function shouldPlayBoneIdle(params)
+		return params.ModName == animatedModName
+			and params.ObjectID == KnifeVariant.BONE_CLUB
+			and params.Player ~= nil
+			and params.Player:HasCollectible(CollectibleType.COLLECTIBLE_SPIRIT_SWORD)
+			and params.ObjectEntity ~= nil
+			and params.ObjectEntity:GetSprite():GetAnimation() == "Idle"
+			and not params.ObjectEntity:GetSprite():IsPlaying("Idle")
+	end
+
+	local function playBoneIdle(params)
+		params.ObjectEntity:GetSprite():Play("Idle", true)
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("Forgotten L0giCked Bone Idle", shouldPlayBoneIdle, playBoneIdle, UniqueItemsAPI.ObjectType.KNIFE)
+
+	local function forgorHasSword(params)
+		return params.ModName == animatedModName
+			and (params.PlayerType == PlayerType.PLAYER_THEFORGOTTEN
+				or params.PlayerType == PlayerType.PLAYER_THEFORGOTTEN_B)
+			and params.Player ~= nil
+			and params.Player:HasCollectible(CollectibleType.COLLECTIBLE_SPIRIT_SWORD)
+	end
+
+	local function applyForgorBoneSword(params)
+		local spritePath = knifePath .. "spirit_sword_l0giCked/" .. params.PlayerType .. "_spirit_sword.anm2"
+		params.SpritePath = { spritePath }
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("Forgotten L0giCked Bone", forgorHasSword, applyForgorBoneSword, UniqueItemsAPI.ObjectType.KNIFE)
+
+	local function eveBWhoreHasSword(params)
+		if params.ModName == "Animated Spirit Swords"
+			and params.ObjectID == KnifeVariant.SUMPTORIUM
+			and params.PlayerType == PlayerType.PLAYER_EVE_B
+			and params.Player ~= nil
+			and params.Player:HasCollectible(CollectibleType.COLLECTIBLE_SPIRIT_SWORD)
+		then
+			return true
+		end
+		return false
+	end
+
+	local function applyEveBSumptoriumSword(params)
+		params.SpritePath = {
+			[0] = knifePath .. "spirit_sword_l0giCked/effect_sumptorium.png",
+		}
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("EveB L0giCked Sumptorium", eveBWhoreHasSword, applyEveBSumptoriumSword, UniqueItemsAPI.ObjectType.KNIFE)
+
+	--#endregion
+	--#region Lost Soul
+
+	-----------------
+	--  LOST SOUL  --
+	-----------------
+
+	local lostSoulNormal = {
+		["Golem"] = true,
+		["Fiend"] = true,
+		["Josuke"] = true,
+		["Namie"] = true,
+		["Sarah"] = true,
+		["Dante"] = true,
+		["Charon"] = true,
+		["Andromeda"] = true,
+		["Samael"] = true,
+		["Bertran"] = true,
+		["Mei"] = true,
+		["Icarus"] = true,
+		["Mammon"] = true,
+		["Edith"] = true,
+		[" Edith"] = "edith_classic",
+		["Job"] = true,
+		["Arachna"] = true,
+		["Nemesis"] = true,
+		["Sodom"] = true,
+		["Gomorrah"] = true,
+		["Bela"] = true,
+		["Eevee"] = true,
+		["Guppy"] = true,
+		["Steven"] = true,
+		["Car"] = true,
+		["Hollow"] = true,
+		["Stranger"] = true,
+		["Mastema"] = true,
+		["MaidInTheMist"] = true,
+		["Dio Part 1"] = "Dio",
+		["Siren"] = true,
+		["​Isaac"] = "Isaac_c",
+		["​Magdalene"] = "Magdalene_c",
+		["​Cain"] = "Cain_c",
+		["​Judas"] = "Judas_c",
+		["​Samson"] = "Samson_c",
+		["​Eden"] = "Eden_c",
+		["​Keeper"] = "Keeper_c",
+		["Bael"] = true,
+		["The Sheriff"] = "Sheriff",
+		["Felix"] = true,
+		["!!!"] = "RedBaby",
+		["..."] = "RedBabySkull",
+	}
+	local lostSoulTainted = {
+		["Fiend"] = true,
+		["Tainted Namie"] = "namie_b",
+		["AndromedaB"] = "andromeda_b",
+		["Samael"] = true,
+		["Tainted Mei"] = "mei_b",
+		["Edith"] = true,
+		["Job"] = true,
+		["Arachna"] = true,
+		["Tainted Nemesis"] = "nemesis_b",
+		["Sodom"] = true,
+		["Gomorrah"] = true,
+		["Decayed"] = true,
+		["Tainted Stranger"] = "stranger_b",
+		["MastemaB"] = true,
+		["Dio Part 3"] = "dio",
+		["!!!"] = "redbaby_b",
+	}
+	local lostSoulPath = familiarPath .. "lostsoul_customlostsoul/"
+
+	local secondLayerSouls = {
+		[PlayerType.PLAYER_THEFORGOTTEN_B] = "40"
+	}
+
+	UniqueItemsAPI.RegisterMod("Custom Lost Souls")
+	for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 2 do
+		local spritePath = lostSoulPath .. playerType .. "_lostsoul.png"
+		local secondLayer = secondLayerSouls[playerType]
+		local secondLayerPath = secondLayer and lostSoulPath .. secondLayer .. "_lostsoul.png" or nil
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = playerType,
+			ObjectID = FamiliarVariant.LOST_SOUL,
+			Anm2 = lostSoulPath .. "003.211_lost soul.anm2",
+			SpritePath = {
+				[0] = spritePath,
+				[1] = spritePath,
+				[3] = secondLayerPath,
+				[4] = secondLayerPath
+			}
+		}, UniqueItemsAPI.ObjectType.FAMILIAR)
+	end
+
+	for name, value in pairs(lostSoulNormal) do
+		local fileName = type(value) == "string" and value or name
+		local spritePath = lostSoulPath .. fileName .. "_lostsoul.png"
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = Isaac.GetPlayerTypeByName(name, false),
+			ObjectID = FamiliarVariant.LOST_SOUL,
+			Anm2 = lostSoulPath .. "003.211_lost soul.anm2",
+			SpritePath = {
+				[0] = spritePath,
+				[1] = spritePath,
+			}
+		}, UniqueItemsAPI.ObjectType.FAMILIAR)
+	end
+
+	for name, value in pairs(lostSoulTainted) do
+		local fileName = type(value) == "string" and value or name
+		local spritePath = lostSoulPath .. fileName .. "_lostsoul.png"
+		UniqueItemsAPI.AssignUniqueObject({
+			PlayerType = Isaac.GetPlayerTypeByName(name, true),
+			ObjectID = FamiliarVariant.LOST_SOUL,
+			Anm2 = lostSoulPath .. "003.211_lost soul.anm2",
+			SpritePath = {
+				[0] = spritePath,
+				[1] = spritePath,
+			}
+		}, UniqueItemsAPI.ObjectType.FAMILIAR)
+	end
+
+	local function eveIsAWhore(params)
+		if not params.Player then return false end
+		local effects = params.Player:GetEffects()
+		return params.ObjectType == UniqueItemsAPI.ObjectType.FAMILIAR
+			and params.ObjectID == FamiliarVariant.LOST_SOUL
+			and (
+				(params.PlayerType == PlayerType.PLAYER_EVE
+					and effects:HasCollectibleEffect(CollectibleType.COLLECTIBLE_WHORE_OF_BABYLON)
+				)
+				or (params.PlayerType == PlayerType.PLAYER_EVE_B
+					and effects:HasCollectibleEffect(CollectibleType.COLLECTIBLE_SUMPTORIUM)
+				)
+			)
+	end
+
+	local function applyEveWhore(params)
+		for layerID, spritePath in pairs(params.SpritePath) do
+			params[layerID] = string.gsub(spritePath, ".png", "_whore.png")
+		end
+		return params
+	end
+
+	UniqueItemsAPI.AssignObjectModifier("Lost Soul Eve Whore", eveIsAWhore, applyEveWhore, UniqueItemsAPI.ObjectType
+		.FAMILIAR)
+
+	--#endregion
 end
 
-UniqueItemsAPI.AddKnifeModifier("Tainted Eve l0giCked Sumptorium", EveBHasSpiritSwordAndSumptoriumKnife, EveUniqueSumptorium)
-]]
+mod:AddCallback(UniqueItemsAPI.Callbacks.LOAD_UNIQUE_ITEMS, mod.OnUniqueItemsLoad)
