@@ -300,6 +300,30 @@ function mod:OnUniqueItemsLoad()
 		[PlayerType.PLAYER_THESOUL_B] = true
 	}
 
+	local beamSwordsXTrike = {
+		[PlayerType.PLAYER_MAGDALENE] = true,
+		[PlayerType.PLAYER_THELOST] = true,
+	}
+
+	local beamSwordsRoyal = {
+		[PlayerType.PLAYER_BLUEBABY] = true,
+		[PlayerType.PLAYER_EVE] = true,
+		[PlayerType.PLAYER_SAMSON] = true,
+		[PlayerType.PLAYER_AZAZEL] = true,
+		[PlayerType.PLAYER_LAZARUS] = true,
+		[PlayerType.PLAYER_LAZARUS2] = true,
+		[PlayerType.PLAYER_BLACKJUDAS] = true,
+		[PlayerType.PLAYER_KEEPER] = true,
+		[PlayerType.PLAYER_ISAAC_B] = true,
+		[PlayerType.PLAYER_JUDAS_B] = true,
+		[PlayerType.PLAYER_BLUEBABY_B] = true,
+		[PlayerType.PLAYER_EVE_B] = true,
+		[PlayerType.PLAYER_SAMSON_B] = true,
+		[PlayerType.PLAYER_AZAZEL_B] = true,
+		[PlayerType.PLAYER_LAZARUS_B] = true,
+		[PlayerType.PLAYER_KEEPER_B] = true
+	}
+
 	local KnifeVariant = {
 		MOMS_KNIFE = 0,
 		BONE_CLUB = 1,
@@ -315,10 +339,18 @@ function mod:OnUniqueItemsLoad()
 	for i = 1, 2 do
 		local modName = i == 1 and "Xtrike's Take" or "Royal's Take"
 		local modPath = i == 1 and "xtrike" or "royal"
+		local swordBeamTable = i == 1 and beamSwordsXTrike or beamSwordsRoyal
 		UniqueItemsAPI.RegisterMod(modName)
 		for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
 			if unsupportedSwords[playerType] then goto continue end
 			local spritePath = knifePath .. "spirit_sword_" .. modPath .. "/" .. playerType .. "_spirit_sword.png"
+			local spiritSword
+			if swordBeamTable[playerType] then
+				spiritSword = {
+					Beam = spritePath,
+					Splash = spritePath
+				}
+			end
 			UniqueItemsAPI.AssignUniqueObject({
 				PlayerType = playerType,
 				ObjectID = KnifeVariant.SPIRIT_SWORD,
@@ -326,7 +358,8 @@ function mod:OnUniqueItemsLoad()
 					[0] = spritePath,
 					[1] = spritePath,
 					[2] = spritePath,
-				}
+				},
+				SwordProjectile = spiritSword
 			}, UniqueItemsAPI.ObjectType.KNIFE)
 			::continue::
 		end
@@ -340,6 +373,10 @@ function mod:OnUniqueItemsLoad()
 			[0] = henryPath,
 			[1] = henryPath,
 			[2] = henryPath
+		},
+		SwordProjectile = {
+			Beam = henryPath,
+			Splash = henryPath
 		}
 	}, UniqueItemsAPI.ObjectType.KNIFE)
 
@@ -387,7 +424,7 @@ function mod:OnUniqueItemsLoad()
 		"Tricky's Sign",
 	}
 
-	local beamSwords = {
+	local altBeamSwords = {
 		["Phosphorus"] = true,
 	}
 
@@ -395,7 +432,7 @@ function mod:OnUniqueItemsLoad()
 		local swordName = string.lower(string.gsub(modName, " ", "_"))
 		local spritePath = knifePath .. "spirit_sword_royal_alts/" .. swordName .. ".png"
 		local spiritSword
-		if beamSwords[modName] then
+		if altBeamSwords[modName] then
 			spiritSword = {
 				Beam = spritePath,
 				Splash = spritePath
