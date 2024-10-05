@@ -41,7 +41,7 @@ function mod:OnUniqueItemsLoad()
 		"Icarus",
 		"Mammon",
 		"Edith",
-		" Edith",
+		[" Edith"] = "Edith (Classic)",
 		"Job",
 		"Arachna",
 		"Nemesis",
@@ -58,18 +58,18 @@ function mod:OnUniqueItemsLoad()
 		"MaidInTheMist",
 		"Dio Part 1",
 		"Siren",
-		"​Isaac",
-		"​Magdalene",
-		"​Cain",
-		"​Judas",
-		"​Samson",
-		"​Eden",
-		"​Keeper",
+		["​Isaac"] = "Tarnished Isaac",
+		["​Magdalene"] = "Tarnished Magdalene",
+		["​Cain"] = "Tarnished Cain",
+		["​Judas"] = "Tarnished Judas",
+		["​Samson"] = "Tarnished Samson",
+		["​Eden"] = "Tarnished Eden",
+		["​Keeper"] = "Tarnished Keeper",
 		"Bael",
 		"The Sheriff",
 		"Felix",
-		"!!!",
-		"...",
+		["!!!"] = "Red Baby",
+		["..."] = "Dead Baby",
 		"Henry"
 	}
 
@@ -91,22 +91,24 @@ function mod:OnUniqueItemsLoad()
 		"Tainted Stranger",
 		"MastemaB",
 		"Dio Part 3",
-		"!!!",
+		["!!!"] = "Red Baby",
 	}
 
-	for _, name in ipairs(fullModdedSupportList) do
+	for key, name in pairs(fullModdedSupportList) do
 		local displayName
-		if string.sub(name, 1, 1) == "​" then
-			displayName = "Tarnished " .. string.sub(name, 2, -1)
-		end
-		if name == " Edith" then
-			displayName = "Edith (Classic)"
+		if type(key) == "string" then
+			displayName = name
+			name = key
 		end
 		UniqueItemsAPI.RegisterCharacter(name, false, displayName)
 	end
 
-	for _, name in ipairs(fullModdedTaintedList) do
+	for key, name in pairs(fullModdedTaintedList) do
 		local displayName
+		if type(key) == "string" then
+			displayName = name
+			name = key
+		end
 		if string.find(name, "Tainted") then
 			displayName = name
 		end
