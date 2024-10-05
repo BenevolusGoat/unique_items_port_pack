@@ -383,10 +383,21 @@ function mod:OnUniqueItemsLoad()
 		"Tricky's Sign",
 	}
 
+	local beamSwords = {
+		["Phosphorus"] = true,
+	}
+
 	for _, modName in ipairs(altSwords) do
 		local swordName = string.lower(string.gsub(modName, " ", "_"))
 		local spritePath = knifePath .. "spirit_sword_royal_alts/" .. swordName .. ".png"
-		UniqueItemsAPI.RegisterMod(swordName)
+		local spiritSword
+		if beamSwords[modName] then
+			spiritSword = {
+				Beam = spritePath,
+				Splash = spritePath
+			}
+		end
+		UniqueItemsAPI.RegisterMod(modName)
 		UniqueItemsAPI.AssignUniqueObject({
 			ObjectID = KnifeVariant.SPIRIT_SWORD,
 			GlobalMod = true,
@@ -394,7 +405,8 @@ function mod:OnUniqueItemsLoad()
 				[0] = spritePath,
 				[1] = spritePath,
 				[2] = spritePath
-			}
+			},
+			SwordProjectile = spiritSword
 		}, UniqueItemsAPI.ObjectType.KNIFE)
 	end
 
