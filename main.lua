@@ -109,11 +109,9 @@ function mod:OnUniqueItemsLoad()
 			displayName = name
 			name = key
 		end
-		if string.find(name, "Tainted") then
-			displayName = name
-		end
+
 		if string.sub(name, -1, -1) == "B" then
-			displayName = string.sub(name, 1, -2)
+			displayName = "Tainted " .. string.sub(name, 1, -2)
 		end
 
 		UniqueItemsAPI.RegisterCharacter(name, true, displayName)
