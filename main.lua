@@ -1,4 +1,4 @@
---VERSION v1.1	
+--VERSION v1.2
 
 local mod = RegisterMod("Unique Items Port Pack", 1)
 
@@ -300,9 +300,18 @@ function mod:OnUniqueItemsLoad()
 		[PlayerType.PLAYER_THESOUL_B] = true
 	}
 
+	local beamSwordsXTrikeOld = {
+		[PlayerType.PLAYER_MAGDALENE] = true,
+		[PlayerType.PLAYER_THELOST] = true,
+	}
+
 	local beamSwordsXTrike = {
 		[PlayerType.PLAYER_MAGDALENE] = true,
 		[PlayerType.PLAYER_THELOST] = true,
+		[PlayerType.PLAYER_APOLLYON] = true,
+		[PlayerType.PLAYER_MAGDALENE_B] = true,
+		[PlayerType.PLAYER_THELOST_B] = true,
+		[PlayerType.PLAYER_APOLLYON_B] = true
 	}
 
 	local beamSwordsRoyal = {
@@ -336,10 +345,16 @@ function mod:OnUniqueItemsLoad()
 		TECH_SWORD = 11,
 	}
 
+	local modInfo = {
+		{"Xtrike's Take", "xtrike", beamSwordsXTrike},
+		{"Xtrike's Take (Old)", "xtrike_old", beamSwordsXTrikeOld},
+		{"Royal's Take", "royal", beamSwordsRoyal}
+	}
+
 	for i = 1, 2 do
-		local modName = i == 1 and "Xtrike's Take" or "Royal's Take"
-		local modPath = i == 1 and "xtrike" or "royal"
-		local swordBeamTable = i == 1 and beamSwordsXTrike or beamSwordsRoyal
+		local modName = modInfo[i][1]
+		local modPath =  modInfo[i][2]
+		local swordBeamTable =  modInfo[i][3]
 		UniqueItemsAPI.RegisterMod(modName)
 		for playerType = 0, PlayerType.NUM_PLAYER_TYPES - 1 do
 			if unsupportedSwords[playerType] then goto continue end
@@ -447,7 +462,8 @@ function mod:OnUniqueItemsLoad()
 				[1] = spritePath,
 				[2] = spritePath
 			},
-			SwordProjectile = spiritSword
+			SwordProjectile = spiritSword,
+			DisableByDefault = true
 		}, UniqueItemsAPI.ObjectType.KNIFE)
 	end
 
