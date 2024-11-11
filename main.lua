@@ -351,7 +351,7 @@ function mod:OnUniqueItemsLoad()
 		{"Royal's Take", "royal", beamSwordsRoyal}
 	}
 
-	for i = 1, 2 do
+	for i = 1, 3 do
 		local modName = modInfo[i][1]
 		local modPath =  modInfo[i][2]
 		local swordBeamTable =  modInfo[i][3]
